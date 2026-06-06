@@ -18,3 +18,9 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Python
+analytics/venv/
+venv/
+__pycache__/
+*.pyc
