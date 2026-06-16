@@ -160,7 +160,7 @@ export default function Login() {
             to="/register"
             className="text-cyan-500 hover:text-cyan-400 transition-colors"
           >
-            Request access →
+            Create Account →
           </Link>
         </p>
       </form>
