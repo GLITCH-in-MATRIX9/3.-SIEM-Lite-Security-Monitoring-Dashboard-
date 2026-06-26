@@ -11,11 +11,10 @@ import {
 } from "../validators/device.validator";
 
 import { DeviceController } from "../controllers/device.controller";
-import { DeviceService } from "../services/device.service";
+import { deviceService } from "../services/device.service";
 
 const router = Router();
 
-const deviceService = new DeviceService();
 const deviceController = new DeviceController(deviceService);
 
 // Create Device

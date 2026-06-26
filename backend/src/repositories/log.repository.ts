@@ -1,8 +1,4 @@
-import {
-  Prisma,
-  LogSeverity,
-  LogSource,
-} from "@prisma/client";
+import { Prisma, LogSeverity, LogSource } from "@prisma/client";
 import { prisma } from "../config/database.config";
 
 export class LogRepository {
@@ -36,75 +32,75 @@ export class LogRepository {
    * Search logs with optional filters
    */
   async search(
-  filters: {
-    deviceId?: string;
-    severity?: LogSeverity;
-    source?: LogSource;
-    startDate?: Date;
-    endDate?: Date;
-  },
-  options: {
-    page: number;
-    limit: number;
-    sortBy: "eventTimestamp" | "createdAt";
-    order: "asc" | "desc";
+    filters: {
+      deviceId?: string;
+      severity?: LogSeverity;
+      source?: LogSource;
+      startDate?: Date;
+      endDate?: Date;
+    },
+    options: {
+      page: number;
+      limit: number;
+      sortBy: "eventTimestamp" | "createdAt";
+      order: "asc" | "desc";
+    },
+  ) {
+    const where: Prisma.LogWhereInput = {
+      ...(filters.deviceId && {
+        deviceId: filters.deviceId,
+      }),
+
+      ...(filters.severity && {
+        severity: filters.severity,
+      }),
+
+      ...(filters.source && {
+        source: filters.source,
+      }),
+
+      ...(filters.startDate || filters.endDate
+        ? {
+            eventTimestamp: {
+              ...(filters.startDate && {
+                gte: filters.startDate,
+              }),
+
+              ...(filters.endDate && {
+                lte: filters.endDate,
+              }),
+            },
+          }
+        : {}),
+    };
+
+    const [logs, total] = await Promise.all([
+      prisma.log.findMany({
+        where,
+
+        include: {
+          device: true,
+        },
+
+        skip: (options.page - 1) * options.limit,
+
+        take: options.limit,
+
+        orderBy: {
+          [options.sortBy]: options.order,
+        },
+      }),
+
+      prisma.log.count({
+        where,
+      }),
+    ]);
+
+    return {
+      logs,
+      total,
+    };
   }
-) {
-  const where: Prisma.LogWhereInput = {
-    ...(filters.deviceId && {
-      deviceId: filters.deviceId,
-    }),
-
-    ...(filters.severity && {
-      severity: filters.severity,
-    }),
-
-    ...(filters.source && {
-      source: filters.source,
-    }),
-
-    ...(filters.startDate || filters.endDate
-      ? {
-          eventTimestamp: {
-            ...(filters.startDate && {
-              gte: filters.startDate,
-            }),
-
-            ...(filters.endDate && {
-              lte: filters.endDate,
-            }),
-          },
-        }
-      : {}),
-  };
-
-  const [logs, total] = await Promise.all([
-    prisma.log.findMany({
-      where,
-
-      include: {
-        device: true,
-      },
-
-      skip: (options.page - 1) * options.limit,
-
-      take: options.limit,
-
-      orderBy: {
-        [options.sortBy]: options.order,
-      },
-    }),
-
-    prisma.log.count({
-      where,
-    }),
-  ]);
-
-  return {
-    logs,
-    total,
-  };
-}
 
   findByDevice(deviceId: string) {
     return prisma.log.findMany({
@@ -122,10 +118,7 @@ export class LogRepository {
     });
   }
 
-  update(
-    id: string,
-    data: Prisma.LogUpdateInput,
-  ) {
+  update(id: string, data: Prisma.LogUpdateInput) {
     return prisma.log.update({
       where: {
         id,
@@ -138,6 +131,22 @@ export class LogRepository {
     return prisma.log.delete({
       where: {
         id,
+      },
+    });
+  }
+
+  async countMatchingLogs(
+    normalizedEvent: string,
+    startTime: Date,
+    endTime: Date,
+  ) {
+    return prisma.log.count({
+      where: {
+        normalizedEvent,
+        eventTimestamp: {
+          gte: startTime,
+          lte: endTime,
+        },
       },
     });
   }

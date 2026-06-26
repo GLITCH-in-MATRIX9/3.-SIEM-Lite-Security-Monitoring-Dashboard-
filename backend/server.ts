@@ -9,6 +9,7 @@ import authRoutes from "./src/routes/auth.routes";
 import deviceRoutes from "./src/routes/device.routes";
 import logRoutes from "./src/routes/log.routes";
 import ruleRoutes from "./src/routes/rule.routes";
+import alertRoutes from "./src/routes/alert.routes";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/devices", deviceRoutes);
 app.use("/api/v1/logs", logRoutes);
 app.use("/api/v1/rules", ruleRoutes);
+app.use("/api/v1/alerts", alertRoutes);
 
 app.get("/", (_, res) => {
   res.json({

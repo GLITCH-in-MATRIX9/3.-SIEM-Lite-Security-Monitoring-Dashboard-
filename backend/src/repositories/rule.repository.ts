@@ -1,32 +1,45 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma, DetectionRule } from "@prisma/client";
+import { prisma } from "../config/database.config";
 
 export class RuleRepository {
-  constructor(private prisma: PrismaClient) {}
-
-  async create(data: Prisma.DetectionRuleCreateInput) {
-    return this.prisma.detectionRule.create({
+  async create(data: Prisma.DetectionRuleCreateInput): Promise<DetectionRule> {
+    return prisma.detectionRule.create({
       data,
     });
   }
 
-  async findAll() {
-    return this.prisma.detectionRule.findMany({
+  async findAll(): Promise<DetectionRule[]> {
+    return prisma.detectionRule.findMany({
       orderBy: {
         createdAt: "desc",
       },
     });
   }
 
-  async findById(id: string) {
-    return this.prisma.detectionRule.findUnique({
+  async findById(id: string): Promise<DetectionRule | null> {
+    return prisma.detectionRule.findUnique({
       where: {
         id,
       },
     });
   }
 
-  async update(id: string, data: Prisma.DetectionRuleUpdateInput) {
-    return this.prisma.detectionRule.update({
+  async findEnabledRules(): Promise<DetectionRule[]> {
+  return prisma.detectionRule.findMany({
+    where: {
+      enabled: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+}
+
+  async update(
+    id: string,
+    data: Prisma.DetectionRuleUpdateInput,
+  ): Promise<DetectionRule> {
+    return prisma.detectionRule.update({
       where: {
         id,
       },
@@ -34,8 +47,8 @@ export class RuleRepository {
     });
   }
 
-  async delete(id: string) {
-    return this.prisma.detectionRule.delete({
+  async delete(id: string): Promise<DetectionRule> {
+    return prisma.detectionRule.delete({
       where: {
         id,
       },

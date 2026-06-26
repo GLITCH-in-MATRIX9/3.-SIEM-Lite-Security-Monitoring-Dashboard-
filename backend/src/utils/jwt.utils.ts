@@ -1,6 +1,7 @@
 // Import the jsonwebtoken library which creates and verifies JWTs (tokens).
 import jwt from "jsonwebtoken";
-
+console.log("JWT_SECRET:", process.env.JWT_SECRET);
+console.log("JWT_REFRESH_SECRET:", process.env.JWT_REFRESH_SECRET);
 // Shape of the data we put into the access token (a simple TypeScript type).
 export interface AccessTokenPayload {
   // Unique user identifier.

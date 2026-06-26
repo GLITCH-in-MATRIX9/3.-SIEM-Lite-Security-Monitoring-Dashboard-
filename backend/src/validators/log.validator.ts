@@ -6,45 +6,41 @@ import {
 } from "@prisma/client";
 
 export const ingestLogSchema = z.object({
-  deviceId: z
-    .string()
-    .uuid("Invalid device ID."),
+  body: z.object({
+    deviceId: z
+      .string()
+      .uuid("Invalid device ID."),
 
-  severity: z.nativeEnum(LogSeverity),
+    severity: z.nativeEnum(LogSeverity),
 
-  source: z.nativeEnum(LogSource),
+    source: z.nativeEnum(LogSource),
 
-  rawMessage: z
-    .string()
-    .trim()
-    .min(1, "Log message is required."),
+    rawMessage: z
+      .string()
+      .trim()
+      .min(1, "Log message is required."),
 
-  normalizedEvent: z
-    .string()
-    .trim()
-    .optional(),
+    normalizedEvent: z
+      .string()
+      .trim()
+      .optional(),
 
-  sourceIp: z
-    .string()
-    .trim()
-    .refine(
-      (ip) => isIP(ip) === 4,
-      {
+    sourceIp: z
+      .string()
+      .trim()
+      .refine((ip) => isIP(ip) === 4, {
         message: "Invalid IPv4 address.",
-      }
-    )
-    .optional(),
+      })
+      .optional(),
 
-  destinationIp: z
-    .string()
-    .trim()
-    .refine(
-      (ip) => isIP(ip) === 4,
-      {
+    destinationIp: z
+      .string()
+      .trim()
+      .refine((ip) => isIP(ip) === 4, {
         message: "Invalid IPv4 address.",
-      }
-    )
-    .optional(),
+      })
+      .optional(),
 
-  eventTimestamp: z.coerce.date(),
+    eventTimestamp: z.coerce.date(),
+  }),
 });

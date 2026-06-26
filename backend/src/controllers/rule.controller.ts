@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { RuleService } from "../services/rule.service";
+import { RuleService,ruleService } from "../services/rule.service";
 
 export class RuleController {
   constructor(private ruleService: RuleService) {}
@@ -7,10 +7,14 @@ export class RuleController {
   createRule = async (
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
-      const rule = await this.ruleService.createRule(req.body);
+      const rule = await this.ruleService.createRule({
+        ...req.body,
+        createdById: (req as any).user.id,
+        userIp: req.ip,
+      });
 
       return res.status(201).json({
         success: true,
@@ -24,7 +28,7 @@ export class RuleController {
   getAllRules = async (
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       const rules = await this.ruleService.getAllRules();
@@ -41,7 +45,7 @@ export class RuleController {
   getRuleById = async (
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       const rule = await this.ruleService.getRuleById(req.params.id);
@@ -58,13 +62,14 @@ export class RuleController {
   updateRule = async (
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
-      const rule = await this.ruleService.updateRule(
-        req.params.id,
-        req.body
-      );
+      const rule = await this.ruleService.updateRule(req.params.id, {
+        ...req.body,
+        updatedById: (req as any).user.id,
+        userIp: req.ip,
+      });
 
       return res.status(200).json({
         success: true,
@@ -78,10 +83,14 @@ export class RuleController {
   deleteRule = async (
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
-      const rule = await this.ruleService.deleteRule(req.params.id);
+      const rule = await this.ruleService.deleteRule(
+        req.params.id,
+        (req as any).user.id,
+        req.ip,
+      );
 
       return res.status(200).json({
         success: true,
@@ -91,4 +100,8 @@ export class RuleController {
       next(error);
     }
   };
+
+  
 }
+
+export const ruleController = new RuleController(ruleService);

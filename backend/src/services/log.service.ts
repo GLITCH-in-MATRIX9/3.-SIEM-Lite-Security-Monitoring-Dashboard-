@@ -4,6 +4,7 @@ import { LogRepository } from "../repositories/log.repository";
 import { DeviceRepository } from "../repositories/device.repository";
 import { AuditRepository } from "../repositories/audit.repository";
 import { normalizeLog } from "../normalization/logNormalizer";
+import { ruleEngine } from "../detection/rule.engine";
 
 export class LogService {
   private logRepository = new LogRepository();
@@ -22,7 +23,7 @@ export class LogService {
     ipAddress?: string;
   }) {
     // Verify device exists
-    
+
     const device = await this.deviceRepository.findById(data.deviceId);
 
     if (!device) {
@@ -44,6 +45,10 @@ export class LogService {
     });
 
     // Audit log
+    // Evaluate detection rules
+    await ruleEngine.evaluate(log);
+
+    // Audit log
     await this.auditRepository.create({
       userId: data.userId,
       action: "LOG_INGESTED",
@@ -52,6 +57,7 @@ export class LogService {
         deviceId: data.deviceId,
         severity: data.severity,
         source: data.source,
+        normalizedEvent,
       },
       ipAddress: data.ipAddress,
     });

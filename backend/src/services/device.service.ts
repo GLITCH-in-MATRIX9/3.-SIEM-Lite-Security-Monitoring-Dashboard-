@@ -1,12 +1,18 @@
-import { DeviceType } from "@prisma/client";
+import {
+  DeviceStatus,
+  DeviceType,
+} from "@prisma/client";
+
 import { DeviceRepository } from "../repositories/device.repository";
 import { AuditRepository } from "../repositories/audit.repository";
-import { DeviceStatus, DeviceType } from "@prisma/client";
+
+const deviceRepository = new DeviceRepository();
+const auditRepository = new AuditRepository();
 
 export class DeviceService {
   constructor(
     private deviceRepository: DeviceRepository,
-    private auditRepository: AuditRepository
+    private auditRepository: AuditRepository,
   ) {}
 
   async createDevice(data: {
@@ -68,11 +74,15 @@ export class DeviceService {
     return this.deviceRepository.findByOrganization(organizationId);
   }
 
-  async getDeviceById(id: string, organizationId: string) {
-    const device = await this.deviceRepository.findByIdAndOrganization(
-      id,
-      organizationId,
-    );
+  async getDeviceById(
+    id: string,
+    organizationId: string,
+  ) {
+    const device =
+      await this.deviceRepository.findByIdAndOrganization(
+        id,
+        organizationId,
+      );
 
     if (!device) {
       throw new Error("Device not found.");
@@ -81,20 +91,6 @@ export class DeviceService {
     return device;
   }
 
-  async deleteDevice(id: string, organizationId: string) {
-    const device = await this.deviceRepository.findByIdAndOrganization(
-      id,
-      organizationId,
-    );
-
-    if (!device) {
-      throw new Error("Device not found.");
-    }
-
-    return this.deviceRepository.delete(id);
-  }
-
-  //updating device
   async updateDevice(
     id: string,
     organizationId: string,
@@ -108,44 +104,56 @@ export class DeviceService {
       userIp?: string;
     },
   ) {
-    const device = await this.deviceRepository.findByIdAndOrganization(
-      id,
-      organizationId,
-    );
+    const device =
+      await this.deviceRepository.findByIdAndOrganization(
+        id,
+        organizationId,
+      );
 
     if (!device) {
       throw new Error("Device not found.");
     }
 
-    if (data.hostname && data.hostname !== device.hostname) {
-      const existingHostname = await this.deviceRepository.findByHostname(
-        data.hostname,
-        organizationId,
-      );
+    // Check duplicate hostname
+    if (
+      data.hostname &&
+      data.hostname !== device.hostname
+    ) {
+      const existingHostname =
+        await this.deviceRepository.findByHostname(
+          data.hostname,
+          organizationId,
+        );
 
       if (existingHostname) {
         throw new Error("Hostname already exists.");
       }
     }
 
-    if (data.ipAddress && data.ipAddress !== device.ipAddress) {
-      const existingIp = await this.deviceRepository.findByIp(
-        data.ipAddress,
-        organizationId,
-      );
+    // Check duplicate IP
+    if (
+      data.ipAddress &&
+      data.ipAddress !== device.ipAddress
+    ) {
+      const existingIp =
+        await this.deviceRepository.findByIp(
+          data.ipAddress,
+          organizationId,
+        );
 
       if (existingIp) {
         throw new Error("IP address already exists.");
       }
     }
 
-    const updatedDevice = await this.deviceRepository.update(id, {
-      name: data.name,
-      hostname: data.hostname,
-      ipAddress: data.ipAddress,
-      deviceType: data.deviceType,
-      status: data.status,
-    });
+    const updatedDevice =
+      await this.deviceRepository.update(id, {
+        name: data.name,
+        hostname: data.hostname,
+        ipAddress: data.ipAddress,
+        deviceType: data.deviceType,
+        status: data.status,
+      });
 
     await this.auditRepository.create({
       userId: data.updatedById,
@@ -159,6 +167,35 @@ export class DeviceService {
 
     return updatedDevice;
   }
+
+  async deleteDevice(
+    id: string,
+    organizationId: string,
+  ) {
+    const device =
+      await this.deviceRepository.findByIdAndOrganization(
+        id,
+        organizationId,
+      );
+
+    if (!device) {
+      throw new Error("Device not found.");
+    }
+
+    await this.auditRepository.create({
+      action: "DEVICE_DELETED",
+      resource: device.id,
+      metadata: {
+        hostname: device.hostname,
+        ipAddress: device.ipAddress,
+      },
+    });
+
+    return this.deviceRepository.delete(id);
+  }
 }
 
-export const deviceService = new DeviceService();
+export const deviceService = new DeviceService(
+  deviceRepository,
+  auditRepository,
+);
