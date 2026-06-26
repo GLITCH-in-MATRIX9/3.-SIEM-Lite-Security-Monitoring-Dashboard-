@@ -40,9 +40,9 @@ export default function App() {
             <Route
               path="/settings"
               element={
-                <RoleGuard roles={["ADMIN", "ANALYST", "OPERATOR", "VIEWER"]}>
-                  <Settings />
-                </RoleGuard>
+              <RoleGuard allowed={["ADMIN", "ANALYST", "OPERATOR", "VIEWER"]}>
+                <Settings />
+              </RoleGuard>
               }
             />
           </Route>
