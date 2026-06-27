@@ -5,6 +5,7 @@ import { DeviceRepository } from "../repositories/device.repository";
 import { AuditRepository } from "../repositories/audit.repository";
 import { normalizeLog } from "../normalization/logNormalizer";
 import { ruleEngine } from "../detection/rule.engine";
+import { logProducer } from "../messaging/producer/log.producer";
 
 export class LogService {
   private logRepository = new LogRepository();
@@ -44,9 +45,18 @@ export class LogService {
       eventTimestamp: data.eventTimestamp,
     });
 
+    // Publish log event to RabbitMQ
+    await logProducer.publishLog({
+      id: log.id,
+      deviceId: log.deviceId,
+      severity: log.severity,
+      source: log.source,
+      normalizedEvent: log.normalizedEvent,
+    });
+
     // Audit log
     // Evaluate detection rules
-    await ruleEngine.evaluate(log);
+    // await ruleEngine.evaluate(log);
 
     // Audit log
     await this.auditRepository.create({

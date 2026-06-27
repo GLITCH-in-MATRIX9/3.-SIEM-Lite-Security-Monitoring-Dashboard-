@@ -78,14 +78,7 @@ export class DeviceRepository {
     });
   }
 
-  update(id: string, data: Prisma.DeviceUpdateInput) {
-    return prisma.device.update({
-      where: {
-        id,
-      },
-      data,
-    });
-  }
+  
 }
 
 export const deviceRepository = new DeviceRepository();
