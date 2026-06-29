@@ -3,6 +3,7 @@ import { AuthController } from "../controllers/auth.controller";
 import { AuthService } from "../services/auth.service";
 import { authenticate } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
+import { loginRateLimiter } from "../middleware/rateLimiter.middleware";
 
 import {
   registerSchema,
@@ -18,7 +19,12 @@ const authController = new AuthController(authService);
 
 router.post("/register", validate(registerSchema), authController.register);
 
-router.post("/login", validate(loginSchema), authController.login);
+router.post(
+  "/login",
+  validate(loginSchema),
+  loginRateLimiter,
+  authController.login,
+);
 
 router.post("/logout", authController.logout);
 
