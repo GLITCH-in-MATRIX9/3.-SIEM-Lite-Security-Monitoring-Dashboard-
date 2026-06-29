@@ -12,6 +12,7 @@ export async function connectRabbitMQ(): Promise<Channel> {
   }
 
   try {
+    console.log("RABBITMQ_URL =", process.env.RABBITMQ_URL);
     connection = await amqp.connect(process.env.RABBITMQ_URL!);
 
     channel = await connection.createChannel();
