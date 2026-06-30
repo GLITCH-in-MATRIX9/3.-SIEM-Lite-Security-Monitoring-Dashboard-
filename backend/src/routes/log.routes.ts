@@ -4,6 +4,7 @@ import { Role } from "@prisma/client";
 import { authenticate } from "../middleware/auth.middleware";
 import { authorize } from "../middleware/authorize.middleware";
 import { validate } from "../middleware/validate.middleware";
+import { logIngestionRateLimiter } from "../middleware/rateLimiter.middleware";
 
 import { LogController } from "../controllers/log.controller";
 import { LogService } from "../services/log.service";
@@ -25,6 +26,7 @@ router.post(
   "/ingest",
   authenticate,
   authorize(Role.ADMIN, Role.OPERATOR),
+  logIngestionRateLimiter,
   validate(ingestLogSchema),
   logController.ingestLog,
 );
