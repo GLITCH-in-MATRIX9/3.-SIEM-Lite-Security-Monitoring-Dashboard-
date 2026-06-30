@@ -155,6 +155,7 @@ await this.auditService.log({
   //Method 5: login()
   async login(data: { username: string; password: string }) {
     const user = await this.userRepository.findByUsername(data.username);
+    console.log("emailVerified:", user?.emailVerified);
 
     if (!user) {
       await comparePassword(data.password, DUMMY_BCRYPT_HASH);
@@ -181,7 +182,16 @@ await this.auditService.log({
 
       throw new UnauthorizedError("Invalid credentials");
     }
+    if (!user.emailVerified) {
+      await this.auditService.log({
+        userId: user.id,
+        action: "LOGIN_BLOCKED_EMAIL_NOT_VERIFIED",
+      });
 
+      throw new UnauthorizedError(
+        "Please verify your email before logging in."
+      );
+    }
     await this.userRepository.update(user.id, {
       loginAttempts: 0,
       lockUntil: null,
