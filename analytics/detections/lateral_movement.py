@@ -1,21 +1,31 @@
-import json
-from collections import defaultdict
+from database.queries import get_logs_by_event
+from database.alerts import create_alert
+
 
 def detect_lateral_movement():
-    with open("logs.json", "r") as file:
-        logs = json.load(file)
 
-    user_ips = defaultdict(set)
+    logs = get_logs_by_event("LATERAL_MOVEMENT")
+
+    systems = {}
 
     for log in logs:
-        if log.get("event_type") == "network_access":
-            user = log.get("user")
-            ip = log.get("ip")
 
-            user_ips[user].add(ip)
+        ip = log["destinationIp"]
 
-    for user, ips in user_ips.items():
-        if len(ips) > 2:
-            print("\n🚨 ALERT: Possible Lateral Movement")
-            print(f"User: {user}")
-            print(f"Systems Accessed: {len(ips)}")
+        if ip not in systems:
+            systems[ip] = 1
+        else:
+            systems[ip] += 1
+
+    if len(systems) >= 1:
+
+        print("\n🚨 ALERT: Possible Lateral Movement")
+        print(f"Systems Accessed: {len(systems)}")
+
+        for ip in systems:
+            print(f"Destination: {ip}")
+            create_alert(
+            "Lateral Movement",
+            "User authenticated across multiple systems",
+            "HIGH"
+        )

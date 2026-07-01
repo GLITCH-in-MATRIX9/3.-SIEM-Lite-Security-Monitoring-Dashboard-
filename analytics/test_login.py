@@ -1,0 +1,3 @@
+from detections.suspicious_login import detect_suspicious_login
+
+detect_suspicious_login()

@@ -1,0 +1,3 @@
+from detections.privilege_escalation import detect_privilege_escalation
+
+detect_privilege_escalation()

@@ -210,6 +210,15 @@ def seed_detection_rules():
                 1,
                 300,
                 "CRITICAL"
+            ),
+            (
+                "rule-ml",
+                "ML Anomaly",
+                "Detects anomalous behavior using Isolation Forest",
+                "ML_ANOMALY",
+                1,
+                0,
+                "HIGH"
             )
         ]
 
@@ -254,7 +263,163 @@ def seed_detection_rules():
             })
 
     print("✅ Detection Rules seeded successfully")
+
+from datetime import datetime, timedelta
+
+def seed_logs():
+    with engine.begin() as conn:
+
+        current_time = datetime.now()
+
+        logs = []
+
+        # -------------------------------
+        # Brute Force (6 failed logins)
+        # -------------------------------
+        for i in range(6):
+            logs.append({
+                "id": f"log-bf-{i}",
+                "deviceId": "device-1",
+                "severity": "HIGH",
+                "source": "WINDOWS",
+                "rawMessage": "Failed login for admin",
+                "normalizedEvent": "LOGIN_FAILURE",
+                "sourceIp": "192.168.1.10",
+                "destinationIp": None,
+                "eventTimestamp": current_time - timedelta(minutes=i)
+            })
+
+        # -------------------------------
+        # Port Scan
+        # -------------------------------
+        ports = [22, 23, 25, 53, 80, 110, 135, 139, 143, 389]
+
+        for i, port in enumerate(ports):
+            logs.append({
+                "id": f"log-ps-{i}",
+                "deviceId": "device-2",
+                "severity": "MEDIUM",
+                "source": "FIREWALL",
+                "rawMessage": f"Connection attempt to port {port}",
+                "normalizedEvent": "PORT_SCAN",
+                "sourceIp": "10.0.0.5",
+                "destinationIp": f"192.168.1.{port % 255}",
+                "eventTimestamp": current_time - timedelta(minutes=10+i)
+            })
+
+        # -------------------------------
+        # Privilege Escalation
+        # -------------------------------
+        logs.append({
+            "id": "log-priv-1",
+            "deviceId": "device-1",
+            "severity": "CRITICAL",
+            "source": "LINUX",
+            "rawMessage": "sudo access granted to admin",
+            "normalizedEvent": "PRIVILEGE_ESCALATION",
+            "sourceIp": "192.168.1.10",
+            "destinationIp": None,
+            "eventTimestamp": current_time
+        })
+
+        # -------------------------------
+        # Suspicious Login
+        # -------------------------------
+        logs.append({
+            "id": "log-login-1",
+            "deviceId": "device-3",
+            "severity": "HIGH",
+            "source": "APPLICATION",
+            "rawMessage": "User john logged in from Russia",
+            "normalizedEvent": "SUSPICIOUS_LOGIN",
+            "sourceIp": "45.10.20.30",
+            "destinationIp": None,
+            "eventTimestamp": current_time
+        })
+
+        # -------------------------------
+        # Lateral Movement
+        # -------------------------------
+        logs.append({
+            "id": "log-lateral-1",
+            "deviceId": "device-3",
+            "severity": "HIGH",
+            "source": "WINDOWS",
+            "rawMessage": "john authenticated to multiple systems",
+            "normalizedEvent": "LATERAL_MOVEMENT",
+            "sourceIp": "192.168.1.20",
+            "destinationIp": "192.168.1.30",
+            "eventTimestamp": current_time
+        })
+
+        # -------------------------------
+        # Suspicious Process
+        # -------------------------------
+        logs.append({
+            "id": "log-proc-1",
+            "deviceId": "device-1",
+            "severity": "CRITICAL",
+            "source": "WINDOWS",
+            "rawMessage": "mimikatz.exe executed",
+            "normalizedEvent": "SUSPICIOUS_PROCESS",
+            "sourceIp": "192.168.1.10",
+            "destinationIp": None,
+            "eventTimestamp": current_time
+        })
+
+        # -------------------------------
+        # Normal Logs
+        # -------------------------------
+        for i in range(5):
+            logs.append({
+                "id": f"log-normal-{i}",
+                "deviceId": "device-3",
+                "severity": "INFO",
+                "source": "APPLICATION",
+                "rawMessage": "Normal user activity",
+                "normalizedEvent": "NORMAL_ACTIVITY",
+                "sourceIp": "192.168.1.50",
+                "destinationIp": None,
+                "eventTimestamp": current_time - timedelta(hours=i)
+            })
+
+        for log in logs:
+            conn.execute(
+                text("""
+                INSERT INTO "Log"
+                (
+                    id,
+                    "deviceId",
+                    severity,
+                    source,
+                    "rawMessage",
+                    "normalizedEvent",
+                    "sourceIp",
+                    "destinationIp",
+                    "eventTimestamp",
+                    "createdAt"
+                )
+                VALUES
+                (
+                    :id,
+                    :deviceId,
+                    :severity,
+                    :source,
+                    :rawMessage,
+                    :normalizedEvent,
+                    :sourceIp,
+                    :destinationIp,
+                    :eventTimestamp,
+                    NOW()
+                )
+                ON CONFLICT (id) DO NOTHING;
+                """),
+                log
+            )
+
+    print(f"✅ {len(logs)} Logs seeded successfully")
 if __name__ == "__main__":
     seed_users()
     seed_devices()
     seed_detection_rules()
+    seed_logs()

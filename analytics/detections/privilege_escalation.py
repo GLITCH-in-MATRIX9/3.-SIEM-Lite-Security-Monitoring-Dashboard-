@@ -1,10 +1,21 @@
-import json
+from database.queries import get_logs_by_event
+from database.alerts import create_alert
+
 
 def detect_privilege_escalation():
-    with open("logs.json", "r") as file:
-        logs = json.load(file)
+
+    logs = get_logs_by_event("PRIVILEGE_ESCALATION")
 
     for log in logs:
-        if log.get("event_type") == "privilege_escalation":
-            print("\n🚨 ALERT: Privilege Escalation Detected")
-            print(f"User: {log.get('user')}")
+
+        print("\n🚨 ALERT: Privilege Escalation Detected")
+
+        if log["sourceIp"]:
+            print(f"Source IP: {log['sourceIp']}")
+
+        print(f"Message: {log['rawMessage']}")
+        create_alert(
+        "Privilege Escalation",
+        log["rawMessage"],
+        "CRITICAL"
+    )

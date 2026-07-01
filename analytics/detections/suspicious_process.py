@@ -1,8 +1,10 @@
-import json
+from database.queries import get_logs_by_event
+from database.alerts import create_alert
+
 
 def detect_suspicious_process():
-    with open("logs.json", "r") as file:
-        logs = json.load(file)
+
+    logs = get_logs_by_event("SUSPICIOUS_PROCESS")
 
     suspicious_processes = [
         "mimikatz.exe",
@@ -10,9 +12,19 @@ def detect_suspicious_process():
     ]
 
     for log in logs:
-        if log.get("event_type") == "process_start":
-            process = log.get("process")
 
-            if process in suspicious_processes:
+        message = log["rawMessage"].lower()
+
+        for process in suspicious_processes:
+
+            if process.lower() in message:
+
                 print("\n🚨 ALERT: Suspicious Process Detected")
                 print(f"Process: {process}")
+                print(f"Source IP: {log['sourceIp']}")
+                print(f"Message: {log['rawMessage']}")
+                create_alert(
+                "Suspicious Process",
+                log["rawMessage"],
+                "CRITICAL"
+            )

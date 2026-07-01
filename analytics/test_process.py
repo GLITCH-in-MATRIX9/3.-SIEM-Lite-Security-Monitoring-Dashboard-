@@ -1,0 +1,3 @@
+from detections.suspicious_process import detect_suspicious_process
+
+detect_suspicious_process()

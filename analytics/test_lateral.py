@@ -1,0 +1,3 @@
+from detections.lateral_movement import detect_lateral_movement
+
+detect_lateral_movement()

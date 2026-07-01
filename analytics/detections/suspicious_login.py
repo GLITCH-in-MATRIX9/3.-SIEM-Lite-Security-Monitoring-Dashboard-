@@ -1,21 +1,23 @@
-import json
-from collections import defaultdict
+from database.queries import get_logs_by_event
+from database.alerts import create_alert
+
 
 def detect_suspicious_login():
-    with open("logs.json", "r") as file:
-        logs = json.load(file)
 
-    user_locations = defaultdict(set)
+    logs = get_logs_by_event("SUSPICIOUS_LOGIN")
 
     for log in logs:
-        if log.get("event_type") == "login_success":
-            user = log.get("user")
-            location = log.get("location")
 
-            user_locations[user].add(location)
+        print("\n🚨 ALERT: Suspicious Login")
 
-    for user, locations in user_locations.items():
-        if len(locations) > 1:
-            print("\n🚨 ALERT: Suspicious Login")
-            print(f"User: {user}")
-            print(f"Locations: {', '.join(locations)}")
+        print(f"Source IP: {log['sourceIp']}")
+
+        print(f"Message: {log['rawMessage']}")
+
+        if log["eventTimestamp"]:
+            print(f"Time: {log['eventTimestamp']}")
+            create_alert(
+            "Suspicious Login",
+            log["rawMessage"],
+            "HIGH"
+        )
